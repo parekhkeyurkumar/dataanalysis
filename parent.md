@@ -1,6 +1,3 @@
-# dataanalysis
-Data Analysis
-
 # E-commerce Promotional Analysis Case Study
 
 ## Problem Statement
@@ -51,61 +48,49 @@ The first step involved extracting all orders placed during the promotional peri
 **Objective:** Extract comprehensive order data to identify patterns in promotional item distribution
 
 **SQL Strategy:**
-- Query both primary and secondary order databases (order_header_db and order_line_db)
+- Query both primary and secondary order databases for comprehensive coverage
 - Filter for active orders only (excluding cancelled/inactive statuses)
 - Include both promotional SKUs and free product codes
-- Join order headers with line items and distributor information
+- Extract essential fields for analysis
 
 ```sql
 -- Query 1: Primary Database
 SELECT 
-  o.market_code, o.order_date, o.customer_id, d.customer_name, o.order_id, 
-  l.product_code, l.product_name, l.quantity, l.unit_price, o.order_total
-FROM ecommerce.order_headers o
-JOIN ecommerce.order_lines l ON o.order_id = l.order_id
-JOIN ecommerce.customers d ON d.customer_id = o.customer_id
-WHERE o.order_id IN (
-    SELECT DISTINCT o.order_id
-    FROM ecommerce.order_headers o
-    JOIN ecommerce.order_lines l ON o.order_id = l.order_id
-    WHERE o.order_status NOT IN ('CANCELLED','INACTIVE')  -- Exclude cancelled/inactive orders
-      AND o.order_type IN ('STANDARD','INTERNAL')         -- Include only standard order types
-      AND o.market_code IN ('MARKET_CODE')
-      AND l.product_code IN ('PROMO_SKU_1','PROMO_SKU_2','PROMO_SKU_3','PROMO_SKU_4',
-                             'PROMO_SKU_5','PROMO_SKU_6','PROMO_SKU_7','PROMO_SKU_8',
-                             'PROMO_SKU_9','PROMO_SKU_10','PROMO_SKU_11','FREEPRODUCT')
-      AND o.order_date BETWEEN 'START_DATE' AND 'END_DATE'
-)
-ORDER BY o.order_id, l.product_code;
+  market_code, order_date, customer_id, customer_name, order_id, 
+  product_code, product_name, quantity, unit_price, order_total
+FROM ecommerce.orders
+WHERE order_status NOT IN ('CANCELLED','INACTIVE')
+  AND order_type IN ('STANDARD','INTERNAL')
+  AND market_code IN ('MARKET_CODE')
+  AND product_code IN ('PROMO_SKU_1','PROMO_SKU_2','PROMO_SKU_3','PROMO_SKU_4',
+                       'PROMO_SKU_5','PROMO_SKU_6','PROMO_SKU_7','PROMO_SKU_8',
+                       'PROMO_SKU_9','PROMO_SKU_10','PROMO_SKU_11','FREEPRODUCT')
+  AND order_date BETWEEN 'START_DATE' AND 'END_DATE'
+ORDER BY order_id, product_code;
 
--- Query 2: Secondary Database (Same logic applied)
+-- Query 2: Secondary Database
 SELECT 
-  o.market_code, o.order_date, o.customer_id, d.customer_name, o.order_id, 
-  l.product_code, l.product_name, l.quantity, l.unit_price, o.order_total
-FROM ecommerce_archive.order_headers o
-JOIN ecommerce_archive.order_lines l ON o.order_id = l.order_id
-JOIN ecommerce_archive.customers d ON d.customer_id = o.customer_id
-WHERE o.order_id IN (
-    SELECT DISTINCT o.order_id
-    FROM ecommerce_archive.order_headers o
-    JOIN ecommerce_archive.order_lines l ON o.order_id = l.order_id
-    WHERE o.order_status NOT IN ('CANCELLED','INACTIVE')
-      AND o.order_type IN ('STANDARD','INTERNAL')
-      AND o.market_code IN ('MARKET_CODE')
-      AND l.product_code IN ('PROMO_SKU_1','PROMO_SKU_2','PROMO_SKU_3','PROMO_SKU_4',
-                             'PROMO_SKU_5','PROMO_SKU_6','PROMO_SKU_7','PROMO_SKU_8',
-                             'PROMO_SKU_9','PROMO_SKU_10','PROMO_SKU_11','FREEPRODUCT')
-      AND o.order_date BETWEEN 'START_DATE' AND 'END_DATE'
-)
-ORDER BY o.order_id, l.product_code;
+  market_code, order_date, customer_id, customer_name, order_id, 
+  product_code, product_name, quantity, unit_price, order_total
+FROM ecommerce_archive.orders
+WHERE order_status NOT IN ('CANCELLED','INACTIVE')
+  AND order_type IN ('STANDARD','INTERNAL')
+  AND market_code IN ('MARKET_CODE')
+  AND product_code IN ('PROMO_SKU_1','PROMO_SKU_2','PROMO_SKU_3','PROMO_SKU_4',
+                       'PROMO_SKU_5','PROMO_SKU_6','PROMO_SKU_7','PROMO_SKU_8',
+                       'PROMO_SKU_9','PROMO_SKU_10','PROMO_SKU_11','FREEPRODUCT')
+  AND order_date BETWEEN 'START_DATE' AND 'END_DATE'
+ORDER BY order_id, product_code;
 ```
 
 **Key Query Components:**
-- **Subquery Logic:** Used nested SELECT to first identify qualifying orders before pulling detailed line items
-- **Multi-table Joins:** Combined order headers (odh), order lines (odl), and distributor data (dstdb)
-- **Status Filtering:** Excluded orders with status '1' (cancelled) and '9' (inactive)
+- **Simple Filtering:** Direct WHERE clauses to identify relevant orders and products
+- **Status Filtering:** Excluded orders with cancelled or inactive status
 - **Comprehensive SKU List:** Included all 11 promotional SKUs plus the free product code
 - **Date Range:** Limited to the 4-day promotional window
+
+**Database Strategy Note:**
+While a UNION operation could have combined results from both databases into a single output file, I chose to run separate queries for each database. This approach provided faster execution times and better performance, especially when dealing with large datasets across multiple database systems.
 
 **Output:** Combined dataset from both databases containing all order details for analysis in subsequent steps.
 
@@ -233,10 +218,10 @@ While Step 3 identified customers with multiple orders, we needed to analyze eac
 ```
 Order Number | Customer Name | Order Date | Item Codes                                    | Total Amount | Free Product Added?
 -------------|---------------|------------|-----------------------------------------------|--------------|-------------------
-12345        | Customer A    | 2025-05-23 | REGULAR_001,PROMO_SKU_6,FREEPRODUCT         | 150          | Yes
-12346        | Customer A    | 2025-05-24 | REGULAR_002,PROMO_SKU_3                      | 200          | No
-12347        | Customer B    | 2025-05-23 | REGULAR_003,PROMO_SKU_1,FREEPRODUCT         | 175          | Yes
-12348        | Customer B    | 2025-05-25 | REGULAR_004,PROMO_SKU_2                      | 180          | No
+12345        | Customer A    | 2025-05-23 | REGULAR_001,PROMO_SKU_6,FREEPRODUCT           | 150          | Yes
+12346        | Customer A    | 2025-05-24 | REGULAR_002,PROMO_SKU_3                       | 200          | No
+12347        | Customer B    | 2025-05-23 | REGULAR_003,PROMO_SKU_1,FREEPRODUCT           | 175          | Yes
+12348        | Customer B    | 2025-05-25 | REGULAR_004,PROMO_SKU_2                       | 180          | No
 ```
 
 **Key Outcomes:**
@@ -339,13 +324,13 @@ After restructuring the data in Step 5, we now had a clean table with individual
 
 **Sample Final Analysis Table:**
 ```
-Customer Name | Order Number | Order Date | Item Codes                              | Total Amount | Free Product Added?
---------------|--------------|------------|-----------------------------------------|--------------|-------------------
-Customer_A    | 78234567     | 2025-05-23 | REGULAR_001,PROMO_SKU_6,FREEPRODUCT   | 218.5        | Yes
-Customer_A    | 78345678     | 2025-05-24 | REGULAR_002,PROMO_SKU_3                | 107.5        | No
-Customer_A    | 78456789     | 2025-05-25 | REGULAR_003,PROMO_SKU_2                | 211.5        | No
-Customer_A    | 78567890     | 2025-05-26 | REGULAR_004,PROMO_SKU_1                | 210.5        | No
-Customer_B    | 78123456     | 2025-05-23 | REGULAR_005,PROMO_SKU_4,FREEPRODUCT   | 107.5        | Yes
+Customer Name | Order Number | Order Date | Item Codes                             | Total Amount | Free Product Added?
+--------------|--------------|------------|----------------------------------------|--------------|-------------------
+Customer_A    | 78234567     | 2025-05-23 | REGULAR_001,PROMO_SKU_6,FREEPRODUCT    | 218          | Yes
+Customer_A    | 78345678     | 2025-05-24 | REGULAR_002,PROMO_SKU_3                | 100          | No
+Customer_A    | 78456789     | 2025-05-25 | REGULAR_003,PROMO_SKU_2                | 227          | No
+Customer_A    | 78567890     | 2025-05-26 | REGULAR_004,PROMO_SKU_1                | 210.9        | No
+Customer_B    | 78123456     | 2025-05-23 | REGULAR_005,PROMO_SKU_4,FREEPRODUCT    | 102          | Yes
 Customer_B    | 78234567     | 2025-05-23 | REGULAR_006,PROMO_SKU_5                | 107.5        | No
 ```
 
