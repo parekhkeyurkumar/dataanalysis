@@ -32,10 +32,9 @@ Determine whether the promotional system's "Max Awards = 1" configuration was pr
 4. Provide data-driven recommendations for future promotional configurations
 
 ### Technical Requirements
-- SQL queries to extract and analyze transactional data
+- SQL queries to extract and analyse transactional data
 - Excel analysis for pattern identification and validation
 - Cross-referencing customer orders with promotional item distribution
-- Statistical validation of the hypothesis
 
 ---
 
@@ -97,7 +96,7 @@ While a UNION operation could have combined results from both databases into a s
 ### Step 2: Data Processing and Cleaning
 
 **Raw Data Characteristics:**
-After executing the SQL queries, the combined dataset contained approximately 10,000 rows exported to Excel format. The data structure showed significant redundancy due to the line-item level detail:
+After executing the SQL queries, the combined dataset contained approximately 12,000 rows exported to Excel format. The data structure showed significant redundancy due to the line-item level detail:
 
 - **Repeated Fields:** Customer names, order IDs, order totals, order dates, and market codes appeared multiple times
 - **Variable Fields:** Only product codes and individual line item details differed between rows
@@ -119,11 +118,10 @@ order_id | customer_name | product_code  | order_total
 1. **Text Formatting Cleanup:**
    - Used Excel Find & Replace to remove double spaces ('  ') and replace with single space ('')
    - Ensured consistent formatting across all text fields
-   - Standardized customer name formatting
 
 2. **Data Preparation for Analysis:**
    - Identified that customer information, order totals, and dates were duplicated across multiple rows
-   - Recognized need to group data by order ID to create distinct order-level records
+   - Recognised need to group data by order ID, name to create distinct order-level records
    - Prepared data for subsequent filtering and analysis steps
 
 **Key Observation:**
@@ -169,7 +167,7 @@ Customer D              | 12351,12352,12353,12354
 
 **Key Findings:**
 - Multiple customers placed 2-4 orders during the promotional period
-- This confirmed the need to analyze promotional item distribution across sequential orders
+- This confirmed the need to analyse promotional item distribution across sequential orders
 - Provided the foundation for testing the "Max Awards = 1" hypothesis
 
 **Strategic Importance:**
@@ -177,7 +175,7 @@ This step was crucial because it isolated the specific customer cohort that coul
 
 ### Step 4: Order-Level Analysis and Free Product Detection
 
-**Objective:** Create a distinct order-level dataset to analyze promotional item distribution across individual orders.
+**Objective:** Create a distinct order-level dataset to analyse promotional item distribution across individual orders.
 
 **Challenge Identified:**
 While Step 3 identified customers with multiple orders, we needed to analyze each individual order to determine which specific orders received the free product. Since the same customer could have multiple order numbers during the promotional period, we needed order-level granularity.
@@ -230,11 +228,11 @@ Order Number | Customer Name | Order Date | Item Codes                          
 - **Binary Free Product Indicator:** Clear "Yes/No" identification of orders with promotional items
 - **Analysis-Ready Dataset:** Prepared for sequential order analysis by customer
 
-This transformation was critical for the next phase: analyzing the chronological order of purchases by repeat customers to validate the "Max Awards = 1" hypothesis.
+This transformation was critical for the next phase: analysing the chronological order of purchases by repeat customers to validate the "Max Awards = 1" hypothesis.
 
 ### Step 5: Data Restructuring for VLOOKUP Analysis
 
-**Challenge:** The Step 3 output contained comma-separated order numbers in single cells, making it impossible to perform clean VLOOKUP operations between the customer list and order-level data from Step 4.
+**Challenge:** The Step 3 output contained comma-separated order numbers in single cells, making it tricky to perform clean VLOOKUP operations between the customer list and order-level data from Step 4.
 
 **Data Structure Problem:**
 ```
@@ -291,7 +289,7 @@ Customer_A    | 78567890
    - Closed and loaded the transformed data
 
 **Result:**
-A clean, normalized table with one row per customer-order combination, perfectly structured for VLOOKUP operations against the Step 4 order-level analysis table.
+A clean, normalised table with one row per customer-order combination, perfectly structured for VLOOKUP operations against the Step 4 order-level analysis table.
 
 **Why This Approach Was Superior:**
 - **Automation:** No manual copy-paste operations
