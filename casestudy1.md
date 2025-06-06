@@ -116,7 +116,7 @@ order_id | customer_name | product_code  | order_total
 **Data Cleaning Process:**
 
 1. **Text Formatting Cleanup:**
-   - Used Excel Find & Replace to remove double spaces ('  ') and replace with single space ('')
+   - Used Excel Find & Replace to remove double spaces ('  ') and replace with no space ('')
    - Ensured consistent formatting across all text fields
 
 2. **Data Preparation for Analysis:**
